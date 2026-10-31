@@ -141,83 +141,171 @@ app.post("/api/register", limitarTentativas, async (req, res) => {
   }
 });
 
-app.post("/api/login", limitarTentativas, (req, res) => {
+app.post("/api/login", limitarTentativas, async (req, res) => {
   const email = texto(req.body.email, 120).toLowerCase();
   const password = typeof req.body.password === "string" ? req.body.password : "";
-  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-  if (!user || !bcrypt.compareSync(password, user.password))
-    return res.status(401).json({ erro: "E-mail ou senha inválidos." });
-  iniciarSessao(req, res, user);
+
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const user = result.rows[0];
+
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return res.status(401).json({ erro: "E-mail ou senha inválidos." });
+    }
+
+    iniciarSessao(req, res, user);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro interno no servidor." });
+  }
 });
+
 
 app.post("/api/logout", (req, res) => {
-  req.session.destroy(() => { res.clearCookie("connect.sid"); res.json({ ok: true }); });
+  req.session.destroy(() => {
+    res.clearCookie("connect.sid");
+    res.json({ ok: true });
+  });
 });
+
 app.get("/api/me", (req, res) => res.json({ user: req.session.user || null }));
 
-app.get("/api/appointments", auth, (req, res) => {
+
+app.get("/api/appointments", auth, async (req, res) => {
   const admin = req.session.user.role === "admin";
   const base = `SELECT a.*, u.name AS account_name FROM appointments a JOIN users u ON u.id = a.user_id`;
-  const rows = admin
-    ? db.prepare(`${base} ORDER BY a.appointment_date, a.id`).all()
-    : db.prepare(`${base} WHERE a.user_id = ? ORDER BY a.appointment_date, a.id`).all(req.session.user.id);
-  res.json(rows);
+
+  try {
+    let result;
+    if (admin) {
+      result = await pool.query(`${base} ORDER BY a.appointment_date, a.id`);
+    } else {
+      result = await pool.query(`${base} WHERE a.user_id = $1 ORDER BY a.appointment_date, a.id`, [req.session.user.id]);
+    }
+    res.json(result.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao listar agendamentos." });
+  }
 });
 
-app.post("/api/appointments", auth, (req, res) => {
+
+app.post("/api/appointments", auth, async (req, res) => {
   const client_name = texto(req.body.client_name, 80);
   const tattoo_idea = texto(req.body.tattoo_idea, 200);
   const appointment_date = req.body.appointment_date;
-  if (!client_name || !tattoo_idea || !appointment_date)
+
+  if (!client_name || !tattoo_idea || !appointment_date) {
     return res.status(400).json({ erro: "Preencha todos os campos." });
-  if (!dataValida(appointment_date)) return res.status(400).json({ erro: "Data inválida." });
-  const result = db.prepare(`INSERT INTO appointments (user_id, client_name, tattoo_idea, appointment_date)
-    VALUES (?, ?, ?, ?)`).run(req.session.user.id, client_name, tattoo_idea, appointment_date);
-  res.status(201).json(db.prepare("SELECT * FROM appointments WHERE id = ?").get(result.lastInsertRowid));
-});
-
-app.put("/api/appointments/:id", auth, (req, res) => {
-  const id = Number(req.params.id);
-  const item = db.prepare("SELECT * FROM appointments WHERE id = ?").get(id);
-  if (!item) return res.status(404).json({ erro: "Agendamento não encontrado." });
-  const admin = req.session.user.role === "admin";
-  if (!admin && item.user_id !== req.session.user.id)
-    return res.status(403).json({ erro: "Você não pode alterar este agendamento." });
-  const client_name = texto(req.body.client_name, 80) || item.client_name;
-  const tattoo_idea = texto(req.body.tattoo_idea, 200) || item.tattoo_idea;
-  const appointment_date = req.body.appointment_date || item.appointment_date;
-  if (!dataValida(appointment_date)) return res.status(400).json({ erro: "Data inválida." });
-  let status = item.status;
-  if (admin && req.body.status) {
-    if (!STATUS_VALIDOS.includes(req.body.status)) return res.status(400).json({ erro: "Status inválido." });
-    status = req.body.status;
   }
-  db.prepare(`UPDATE appointments SET client_name = ?, tattoo_idea = ?, appointment_date = ?, status = ? WHERE id = ?`)
-    .run(client_name, tattoo_idea, appointment_date, status, id);
-  res.json(db.prepare("SELECT * FROM appointments WHERE id = ?").get(id));
+  if (!dataValida(appointment_date)) {
+    return res.status(400).json({ erro: "Data inválida." });
+  }
+
+  try {
+    const queryText = `
+      INSERT INTO appointments (user_id, client_name, tattoo_idea, appointment_date) 
+      VALUES ($1, $2, $3, $4) RETURNING *
+    `;
+    const values = [req.session.user.id, client_name, tattoo_idea, appointment_date];
+    const result = await pool.query(queryText, values);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao criar agendamento." });
+  }
 });
 
-app.delete("/api/appointments/:id", auth, (req, res) => {
+
+app.put("/api/appointments/:id", auth, async (req, res) => {
   const id = Number(req.params.id);
-  const item = db.prepare("SELECT * FROM appointments WHERE id = ?").get(id);
-  if (!item) return res.status(404).json({ erro: "Agendamento não encontrado." });
-  if (req.session.user.role !== "admin" && item.user_id !== req.session.user.id)
-    return res.status(403).json({ erro: "Você não pode excluir este agendamento." });
-  db.prepare("DELETE FROM appointments WHERE id = ?").run(id);
-  res.json({ ok: true });
+
+  try {
+    const itemResult = await pool.query("SELECT * FROM appointments WHERE id = $1", [id]);
+    const item = itemResult.rows[0];
+
+    if (!item) return res.status(404).json({ erro: "Agendamento não encontrado." });
+
+    const admin = req.session.user.role === "admin";
+    if (!admin && item.user_id !== req.session.user.id) {
+      return res.status(403).json({ erro: "Você não pode alterar este agendamento." });
+    }
+
+    const client_name = texto(req.body.client_name, 80) || item.client_name;
+    const tattoo_idea = texto(req.body.tattoo_idea, 200) || item.tattoo_idea;
+    const appointment_date = req.body.appointment_date || item.appointment_date;
+
+    if (!dataValida(appointment_date)) {
+      return res.status(400).json({ erro: "Data inválida." });
+    }
+
+    let status = item.status;
+    if (admin && req.body.status) {
+      if (!STATUS_VALIDOS.includes(req.body.status)) {
+        return res.status(400).json({ erro: "Status inválido." });
+      }
+      status = req.body.status;
+    }
+
+    const updateText = `
+      UPDATE appointments 
+      SET client_name = $1, tattoo_idea = $2, appointment_date = $3, status = $4 
+      WHERE id = $5 RETURNING *
+    `;
+    const updateResult = await pool.query(updateText, [client_name, tattoo_idea, appointment_date, status, id]);
+    
+    res.json(updateResult.rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao atualizar agendamento." });
+  }
 });
 
-app.get("/api/users", auth, adminOnly, (req, res) => {
-  res.json(db.prepare("SELECT id, name, email, role FROM users ORDER BY name").all());
+
+app.delete("/api/appointments/:id", auth, async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const itemResult = await pool.query("SELECT * FROM appointments WHERE id = $1", [id]);
+    const item = itemResult.rows[0];
+
+    if (!item) return res.status(404).json({ erro: "Agendamento não encontrado." });
+
+    if (req.session.user.role !== "admin" && item.user_id !== req.session.user.id) {
+      return res.status(403).json({ erro: "Você não pode excluir este agendamento." });
+    }
+
+    await pool.query("DELETE FROM appointments WHERE id = $1", [id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao deletar agendamento." });
+  }
 });
 
-// JSON inválido e erros inesperados sempre respondem em JSON
+
+app.get("/api/users", auth, adminOnly, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, name, email, role FROM users ORDER BY name");
+    res.json(result.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao listar usuários." });
+  }
+});
+
+
 app.use("/api", (req, res) => res.status(404).json({ erro: "Rota não encontrada." }));
+
 app.use((err, req, res, next) => {
-  if (err.type === "entity.parse.failed") return res.status(400).json({ erro: "Requisição inválida." });
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ erro: "Requisição inválida." });
+  }
   console.error(err);
   res.status(500).json({ erro: "Erro interno do servidor." });
 });
+
 
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => console.log(`ANDERSONSTUDIO rodando em http://localhost:${PORT}`));
