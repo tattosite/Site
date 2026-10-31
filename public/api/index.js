@@ -4,6 +4,52 @@ const bcrypt = require("bcryptjs");
 const path = require("path");
 const { Pool } = require("pg");
 const app = express();
+let bancoPronto = false;
+app.use(async (req, res, next) => {
+  if (!bancoPronto) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'user'
+        );
+      `);
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS appointments (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL,
+          client_name TEXT NOT NULL,
+          tattoo_idea TEXT NOT NULL,
+          appointment_date TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'Pendente',
+          FOREIGN KEY(user_id) REFERENCES users(id)
+        );
+      `);
+      
+      // Cria o admin padrão se não existir
+      const adminEmail = (process.env.ADMIN_EMAIL || "admin@tatuagem.com").toLowerCase();
+      const adminSenha = process.env.ADMIN_PASSWORD || "Admin123!";
+      const checaAdmin = await pool.query("SELECT id FROM users WHERE email = $1", [adminEmail]);
+      
+      if (checaAdmin.rows.length === 0) {
+        const hashSenha = require("bcryptjs").hashSync(adminSenha, 10);
+        await pool.query(
+          "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, 'admin')",
+          ["Administrador", adminEmail, hashSenha]
+        );
+      }
+      
+      bancoPronto = true;
+    } catch (err) {
+      console.error("Erro crítico ao criar tabelas no Neon:", err);
+      return res.status(500).json({ erro: "Erro ao conectar com o banco de dados." });
+    }
+  }
+  next();
+});
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -60,7 +106,6 @@ async function inicializarBanco() {
   }
 }
 
-inicializarBanco();
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "20kb" }));
