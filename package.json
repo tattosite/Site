@@ -1,0 +1,16 @@
+{
+  "name": "andersonstudio",
+  "version": "1.0.0",
+  "description": "Site e sistema de agendamentos do ANDERSONSTUDIO",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "pg": "^8.23.1"
+  }
+}
