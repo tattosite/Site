@@ -2,7 +2,7 @@
   "name": "andersonstudio",
   "version": "1.0.0",
   "description": "Site e sistema de agendamentos do ANDERSONSTUDIO",
-  "main": "server.js",
+  "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
     "dev": "node api/index.js"
