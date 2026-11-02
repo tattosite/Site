@@ -116,21 +116,22 @@ function formatarData(iso) {
 }
 
 function redirecionarPorPerfil(user) {
-    if (user.role === "admin") {
-        window.location.href = "admin.html";
-    } else {
-        window.location.href = "cliente.html";
-    }
+  if (user.role === "admin") {
+    window.location.href = "/admin.html";
+  } else {
+    window.location.href = "/cliente.html";
+  }
 }
 
 async function iniciar() {
-    const dados = await api("/api/me");
+  const dados = await api("/api/me");
 
-    if (dados.user) {
-        usuarioAtual = dados.user;
-        redirecionarPorPerfil(usuarioAtual);
-    }
+  if (dados.user) {
+    usuarioAtual = dados.user;
+    redirecionarPorPerfil(usuarioAtual);
+  }
 }
+
 async function mostrarPainel() {
   $("auth-area").classList.add("oculto");
   $("dashboard").classList.remove("oculto");
