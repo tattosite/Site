@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANDERSONSTUDIO - Administrador</title>
+
+    <link rel="stylesheet" href="public/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>ANDERSONSTUDIO</h1>
+        <nav>
+            <a href="#inicio">Início</a>
+            <a href="#agendamentos">Agendamentos</a>
+            <a href="#clientes">Clientes</a>
+            <button id="btnSair">Sair</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <section id="inicio">
+            <h2>Painel Administrativo</h2>
+            <p>Bem-vindo ao painel de gerenciamento do estúdio.</p>
+
+            <div class="dashboard">
+                <div class="card">
+                    <h3>Total de Agendamentos</h3>
+                    <p id="totalAgendamentos">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Pendentes</h3>
+                    <p id="agendamentosPendentes">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Concluídos</h3>
+                    <p id="agendamentosConcluidos">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Total de Clientes</h3>
+                    <p id="totalClientes">0</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="agendamentos">
+            <h2>Gerenciar Agendamentos</h2>
+
+            <input
+                type="text"
+                id="buscarAgendamento"
+                placeholder="Buscar agendamento..."
+            >
+
+            <div id="listaAgendamentos">
+            </div>
+        </section>
+
+        <section id="clientes">
+            <h2>Gerenciar Clientes</h2>
+
+            <input
+                type="text"
+                id="buscarCliente"
+                placeholder="Buscar cliente..."
+            >
+
+            <div id="listaClientes">
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>ANDERSONSTUDIO - Painel Administrativo</p>
+    </footer>
+
+    <script src="public/admin.js"></script>
+
+</body>
+</html>
