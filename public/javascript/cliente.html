@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANDERSONSTUDIO - Área do Cliente</title>
+
+    <link rel="stylesheet" href="public/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>ANDERSONSTUDIO</h1>
+        <nav>
+            <a href="#inicio">Início</a>
+            <a href="#novoAgendamento">Agendar</a>
+            <a href="#meusAgendamentos">Meus Agendamentos</a>
+            <button id="btnSair">Sair</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <section id="inicio">
+            <h2>Área do Cliente</h2>
+            <p>Bem-vindo ao ANDERSONSTUDIO!</p>
+            <p>Acompanhe seus agendamentos e solicite novos horários.</p>
+        </section>
+
+        <section id="novoAgendamento">
+            <h2>Novo Agendamento</h2>
+
+            <form id="formAgendamento">
+
+                <label for="data">Data desejada:</label>
+                <input type="date" id="data" required>
+
+                <label for="horario">Horário desejado:</label>
+                <input type="time" id="horario" required>
+
+                <label for="descricao">Descrição da tatuagem:</label>
+                <textarea
+                    id="descricao"
+                    placeholder="Descreva sua ideia de tatuagem..."
+                    required
+                ></textarea>
+
+                <button type="submit">Solicitar Agendamento</button>
+
+            </form>
+        </section>
+
+        <section id="meusAgendamentos">
+            <h2>Meus Agendamentos</h2>
+
+            <div id="listaMeusAgendamentos">
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>ANDERSONSTUDIO - Área do Cliente</p>
+    </footer>
+
+    <script src="javascript/cliente.js"></script>
+
+</body>
+</html>
