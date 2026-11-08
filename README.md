@@ -1,4 +1,4 @@
-# ANDERSONSTUDIO — estúdio de tatuagem
+# Kroma Studio — estúdio de tatuagem
 
 Projeto acadêmico básico com página de apresentação, login/cadastro, controle de acesso, CRUD de agendamentos e banco SQLite.
 
