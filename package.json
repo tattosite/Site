@@ -1,0 +1,18 @@
+{
+  "name": "kroma studio",
+  "version": "1.0.0",
+  "description": "Site e sistema de agendamentos do KROMASTUDIO",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^18.0.9",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "pg": "^8.23.1"
+  }
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kroma Studio - Área do Cliente</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1 class="logo">KROMA<span>STUDIO</span></h1>
+        <nav>
+            <a href="#inicio">Início</a>
+            <a href="#novoAgendamento">Agendar</a>
+            <a href="#meusAgendamentos">Meus Agendamentos</a>
+            <button id="btnSair" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Sair</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <section id="inicio" class="secao">
+            <h2>Área do Cliente</h2>
+            <p>Bem-vindo ao Kroma Studio!</p>
+            <p>Acompanhe seus agendamentos e solicite novos horários.</p>
+        </section>
+
+        <section id="novoAgendamento" class="secao">
+            <h2>Novo Agendamento</h2>
+
+            <form id="formAgendamento">
+
+                <label for="data">Data desejada:</label>
+                <input type="date" id="data" required>
+
+                <label for="horario">Horário desejado:</label>
+                <input type="time" id="horario" required>
+
+                <label for="descricao">Descrição da tatuagem:</label>
+                <textarea
+                    id="descricao"
+                    placeholder="Descreva sua ideia de tatuagem..."
+                    required
+                    style="width: 100%; padding: 11px; margin-top: 5px; border: 1px solid #555; border-radius: 3px; background: #292929; color: white; font: inherit; font-size: 15px; min-height: 100px;"
+                ></textarea>
+
+                <button type="submit" class="btn largura" style="margin-top: 15px;">Solicitar Agendamento</button>
+
+            </form>
+        </section>
+
+        <section id="meusAgendamentos" class="secao">
+            <h2>Meus Agendamentos</h2>
+
+            <div id="listaMeusAgendamentos">
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>KROMA STUDIO - Área do Cliente</p>
+    </footer>
+
+    <script src="javascript/cliente.js"></script>
+
+</body>
+</html>
