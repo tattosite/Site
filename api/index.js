@@ -56,6 +56,36 @@ async function inicializarBanco() {
         FOREIGN KEY(user_id) REFERENCES users(id)
       );
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tattoo_styles (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS services (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT,
+        base_price NUMERIC(10, 2) NOT NULL CHECK (base_price >= 0)
+      );
+    `);
+    await pool.query("ALTER TABLE appointments ADD COLUMN IF NOT EXISTS style_id INTEGER REFERENCES tattoo_styles(id) ON DELETE SET NULL");
+    await pool.query("ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_id INTEGER REFERENCES services(id) ON DELETE SET NULL");
+    await pool.query(`
+      INSERT INTO tattoo_styles (name, description) VALUES
+        ('Traço fino', 'Traços finos, delicados e minimalistas.'),
+        ('Tatuagem preta sólida', 'Desenhos com áreas de tinta preta e alto contraste.'),
+        ('Autoral', 'Projeto personalizado criado a partir da ideia do cliente.')
+      ON CONFLICT (name) DO NOTHING
+    `);
+    await pool.query(`
+      INSERT INTO services (name, description, base_price) VALUES
+        ('Tatuagem pequena', 'Tatuagem de pequeno porte, sujeita à avaliação do artista.', 150.00),
+        ('Tatuagem média', 'Tatuagem de porte médio, sujeita à avaliação do artista.', 300.00)
+      ON CONFLICT (name) DO NOTHING
+    `);
     
     const adminEmail = (process.env.ADMIN_EMAIL || "admin@tatuagem.com").toLowerCase();
     const adminSenha = process.env.ADMIN_PASSWORD || "Admin123!";
@@ -139,6 +169,11 @@ function adminOnly(req, res, next) {
   next();
 }
 const texto = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+function idOpcional(v) {
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : NaN;
+}
 function dataValida(s) {
   if (typeof s !== "string" || !DATA_RE.test(s)) return false;
   const d = new Date(s + "T00:00:00Z");
@@ -211,7 +246,11 @@ app.get("/api/me", (req, res) => res.json({ user: req.session.user || null }));
 
 app.get("/api/appointments", auth, async (req, res) => {
   const admin = req.session.user.role === "admin";
-  const base = `SELECT a.*, u.name AS account_name FROM appointments a JOIN users u ON u.id = a.user_id`;
+  const base = `SELECT a.*, u.name AS account_name, st.name AS style_name, sv.name AS service_name, sv.base_price
+    FROM appointments a
+    JOIN users u ON u.id = a.user_id
+    LEFT JOIN tattoo_styles st ON st.id = a.style_id
+    LEFT JOIN services sv ON sv.id = a.service_id`;
 
   try {
     let result;
@@ -232,6 +271,8 @@ app.post("/api/appointments", auth, async (req, res) => {
   const client_name = texto(req.body.client_name, 80);
   const tattoo_idea = texto(req.body.tattoo_idea, 200);
   const appointment_date = req.body.appointment_date;
+  const style_id = idOpcional(req.body.style_id);
+  const service_id = idOpcional(req.body.service_id);
 
   if (!client_name || !tattoo_idea || !appointment_date) {
     return res.status(400).json({ erro: "Preencha todos os campos." });
@@ -239,17 +280,21 @@ app.post("/api/appointments", auth, async (req, res) => {
   if (!dataValida(appointment_date)) {
     return res.status(400).json({ erro: "Data inválida." });
   }
+  if (Number.isNaN(style_id) || Number.isNaN(service_id)) {
+    return res.status(400).json({ erro: "Estilo ou serviço inválido." });
+  }
 
   try {
     const queryText = `
-      INSERT INTO appointments (user_id, client_name, tattoo_idea, appointment_date) 
-      VALUES ($1, $2, $3, $4) RETURNING *
+      INSERT INTO appointments (user_id, client_name, tattoo_idea, appointment_date, style_id, service_id) 
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
     `;
-    const values = [req.session.user.id, client_name, tattoo_idea, appointment_date];
+    const values = [req.session.user.id, client_name, tattoo_idea, appointment_date, style_id, service_id];
     const result = await pool.query(queryText, values);
     
     res.status(201).json(result.rows[0]);
   } catch (e) {
+    if (e.code === "23503") return res.status(400).json({ erro: "Estilo ou serviço não encontrado." });
     console.error(e);
     res.status(500).json({ erro: "Erro ao criar agendamento." });
   }
@@ -278,6 +323,12 @@ app.put("/api/appointments/:id", auth, async (req, res) => {
       return res.status(400).json({ erro: "Data inválida." });
     }
 
+    const style_id = "style_id" in req.body ? idOpcional(req.body.style_id) : item.style_id;
+    const service_id = "service_id" in req.body ? idOpcional(req.body.service_id) : item.service_id;
+    if (Number.isNaN(style_id) || Number.isNaN(service_id)) {
+      return res.status(400).json({ erro: "Estilo ou serviço inválido." });
+    }
+
     let status = item.status;
     if (admin && req.body.status) {
       if (!STATUS_VALIDOS.includes(req.body.status)) {
@@ -288,13 +339,14 @@ app.put("/api/appointments/:id", auth, async (req, res) => {
 
     const updateText = `
       UPDATE appointments 
-      SET client_name = $1, tattoo_idea = $2, appointment_date = $3, status = $4 
-      WHERE id = $5 RETURNING *
+      SET client_name = $1, tattoo_idea = $2, appointment_date = $3, status = $4, style_id = $5, service_id = $6
+      WHERE id = $7 RETURNING *
     `;
-    const updateResult = await pool.query(updateText, [client_name, tattoo_idea, appointment_date, status, id]);
+    const updateResult = await pool.query(updateText, [client_name, tattoo_idea, appointment_date, status, style_id, service_id, id]);
     
     res.json(updateResult.rows[0]);
   } catch (e) {
+    if (e.code === "23503") return res.status(400).json({ erro: "Estilo ou serviço não encontrado." });
     console.error(e);
     res.status(500).json({ erro: "Erro ao atualizar agendamento." });
   }
@@ -323,6 +375,27 @@ app.delete("/api/appointments/:id", auth, async (req, res) => {
 });
 
 
+app.get("/api/styles", auth, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, name, description FROM tattoo_styles ORDER BY id");
+    res.json(result.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao listar estilos." });
+  }
+});
+
+app.get("/api/services", auth, async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, name, description, base_price FROM services ORDER BY base_price, id");
+    res.json(result.rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: "Erro ao listar serviços." });
+  }
+});
+
+
 app.get("/api/users", auth, adminOnly, async (req, res) => {
   try {
     const result = await pool.query("SELECT id, name, email, role FROM users ORDER BY name");
@@ -330,6 +403,45 @@ app.get("/api/users", auth, adminOnly, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ erro: "Erro ao listar usuários." });
+  }
+});
+
+
+app.delete("/api/users/:id", auth, adminOnly, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ erro: "Conta inválida." });
+
+  let client;
+  try {
+    client = await pool.connect();
+
+    const alvoResult = await client.query("SELECT id, role FROM users WHERE id = $1", [id]);
+    const alvo = alvoResult.rows[0];
+
+    if (!alvo) return res.status(404).json({ erro: "Conta não encontrada." });
+    if (alvo.role === "admin") {
+      return res.status(400).json({ erro: "Não é possível excluir uma conta de administrador." });
+    }
+
+    await client.query("BEGIN");
+    await client.query("DELETE FROM appointments WHERE user_id = $1", [id]);
+    await client.query("DELETE FROM users WHERE id = $1", [id]);
+    await client.query("COMMIT");
+
+    // encerra sessões ativas da conta excluída (opcional: se falhar, a exclusão continua valendo)
+    try {
+      await pool.query("DELETE FROM user_sessions WHERE sess::jsonb -> 'user' ->> 'id' = $1::text", [id]);
+    } catch (e) {
+      console.error("Não foi possível limpar as sessões:", e.message);
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+    console.error("Erro ao excluir conta:", e);
+    res.status(500).json({ erro: "Erro ao excluir a conta: " + e.message });
+  } finally {
+    if (client) client.release();
   }
 });
 
