@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kroma Studio - Área do Cliente</title>
+
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body class="pagina">
+
+    <header>
+        <h1 class="logo">KROMA<span>STUDIO</span></h1>
+        <nav>
+            <a href="#inicio">Início</a>
+            <a href="#novoAgendamento">Agendar</a>
+            <a href="#meusAgendamentos">Meus Agendamentos</a>
+            <button id="btnSair" type="button" class="btn btn-outline btn-pequeno">Sair</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <section id="inicio" class="secao">
+            <h2>Área do Cliente</h2>
+            <p id="boasVindas">Bem-vindo ao Kroma Studio!</p>
+            <p>Acompanhe seus agendamentos e solicite novos horários.</p>
+        </section>
+
+        <section id="novoAgendamento" class="secao">
+            <h2 id="tituloForm">Novo Agendamento</h2>
+
+            <div id="barraEdicao" class="barra-edicao oculto">
+                <span>Você está editando um agendamento.</span>
+                <button type="button" id="btnCancelarEdicao" class="btn btn-outline btn-claro btn-pequeno">Cancelar edição</button>
+            </div>
+
+            <form id="formAgendamento">
+                <input type="hidden" id="agendamentoId">
+
+                <label for="data">Data desejada:</label>
+                <input type="date" id="data" required>
+
+                <label for="horario">Horário desejado:</label>
+                <input type="time" id="horario" required>
+
+                <label for="estilo">Estilo:</label>
+                <select id="estilo" required>
+                    <option value="">Carregando...</option>
+                </select>
+
+                <label for="servico">Serviço:</label>
+                <select id="servico" required>
+                    <option value="">Carregando...</option>
+                </select>
+
+                <label for="descricao">Descrição da tatuagem:</label>
+                <textarea id="descricao" maxlength="170" placeholder="Descreva sua ideia de tatuagem..." required></textarea>
+
+                <button type="submit" id="btnSalvar" class="btn largura margem-topo">Solicitar Agendamento</button>
+            </form>
+        </section>
+
+        <section id="meusAgendamentos" class="secao">
+            <h2>Meus Agendamentos</h2>
+
+            <div id="listaMeusAgendamentos" class="lista"></div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>KROMA STUDIO - Área do Cliente</p>
+    </footer>
+
+    <script src="javascript/cliente.js?v=3"></script>
+
+</body>
+</html>

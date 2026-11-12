@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kroma Studio - Administrador</title>
+
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body class="pagina">
+
+    <header>
+        <h1 class="logo">KROMA<span>STUDIO</span></h1>
+        <nav>
+            <a href="#inicio">Início</a>
+            <a href="#agendamentos">Agendamentos</a>
+            <a href="#clientes">Clientes</a>
+            <button id="btnSair" type="button" class="btn btn-outline btn-pequeno">Sair</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <section id="inicio" class="secao">
+            <h2>Painel Administrativo</h2>
+            <p>Bem-vindo ao painel de gerenciamento do Kroma Studio.</p>
+
+            <div class="resumo">
+                <div class="card">
+                    <h3>Total de Agendamentos</h3>
+                    <p id="totalAgendamentos">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Pendentes</h3>
+                    <p id="agendamentosPendentes">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Concluídos</h3>
+                    <p id="agendamentosConcluidos">0</p>
+                </div>
+
+                <div class="card">
+                    <h3>Total de Clientes</h3>
+                    <p id="totalClientes">0</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="agendamentos" class="secao">
+            <h2>Gerenciar Agendamentos</h2>
+
+            <input type="text" id="buscarAgendamento" placeholder="Buscar agendamento...">
+
+            <div id="listaAgendamentos" class="lista"></div>
+        </section>
+
+        <section id="clientes" class="secao">
+            <h2>Gerenciar Clientes</h2>
+
+            <input type="text" id="buscarCliente" placeholder="Buscar cliente...">
+
+            <div id="listaClientes" class="lista"></div>
+        </section>
+
+    </main>
+
+    <dialog id="dialogEditar">
+        <form id="formEditar" method="dialog">
+            <h3>Editar agendamento</h3>
+            <input type="hidden" id="editarId">
+
+            <label for="editarNome">Nome do cliente
+                <input type="text" id="editarNome" required maxlength="80">
+            </label>
+
+            <label for="editarIdeia">Descrição da tatuagem
+                <textarea id="editarIdeia" required maxlength="200"></textarea>
+            </label>
+
+            <label for="editarEstilo">Estilo
+                <select id="editarEstilo">
+                    <option value="">Não informado</option>
+                </select>
+            </label>
+
+            <label for="editarServico">Serviço
+                <select id="editarServico">
+                    <option value="">Não informado</option>
+                </select>
+            </label>
+
+            <label for="editarData">Data
+                <input type="date" id="editarData" required>
+            </label>
+
+            <label for="editarStatus">Status
+                <select id="editarStatus">
+                    <option>Pendente</option>
+                    <option>Confirmado</option>
+                    <option>Concluído</option>
+                    <option>Cancelado</option>
+                </select>
+            </label>
+
+            <div class="acoes">
+                <button type="submit" class="btn">Salvar</button>
+                <button type="button" id="btnFecharEditar" class="btn btn-outline">Cancelar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <footer>
+        <p>KROMA STUDIO - Painel Administrativo</p>
+    </footer>
+
+    <script src="javascript/admin.js?v=3"></script>
+
+</body>
+</html>
