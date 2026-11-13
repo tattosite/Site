@@ -1,52 +1,95 @@
-# ANDERSONSTUDIO — estúdio de tatuagem
+<h1 align="center">KROMA STUDIO</h1>
 
-Projeto acadêmico básico com página de apresentação, login/cadastro, controle de acesso, CRUD de agendamentos e banco PostgreSQL (Neon).
+<p align="center">
+  Site de agendamento para um estúdio de tatuagem.<br>
+  O cliente pede um horário, o estúdio gerencia tudo em um painel.
+</p>
 
-## Requisitos
-- Node.js instalado (versão LTS recomendada)
-- VS Code
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white" alt="Express">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white" alt="Vercel">
+</p>
 
-## Como executar
-1. Extraia o ZIP e abra a pasta `studio_tattoo_modelo` no VS Code.
-2. Abra o terminal do VS Code (**Terminal > Novo Terminal**).
-3. Instale as dependências:
+---
+
+## Funcionalidades
+
+<table>
+  <tr>
+    <th width="50%">Cliente</th>
+    <th width="50%">Administrador</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      • Criar conta e entrar<br>
+      • Agendar com data, horário, estilo e serviço<br>
+      • Editar e excluir os próprios agendamentos<br>
+      • Acompanhar o status do pedido
+    </td>
+    <td valign="top">
+      • Ver o resumo dos agendamentos<br>
+      • Editar, mudar o status e excluir agendamentos<br>
+      • Buscar agendamentos e clientes<br>
+      • Excluir contas de clientes
+    </td>
+  </tr>
+</table>
+
+## Tecnologias
+
+**No navegador (front-end)**
+- **HTML:** estrutura das páginas (formulários, listas, menus).
+- **CSS:** visual, com cores, grades e adaptação ao celular.
+- **JavaScript:** busca os dados no servidor, monta os cards na tela e cuida de editar, excluir e filtrar.
+
+**No servidor (back-end)**
+- **Node.js com Express:** recebe os pedidos do site, confere quem está logado e responde com os dados.
+- **bcrypt:** guarda as senhas de forma que ninguém consegue ler.
+- **Sessões por cookie:** mantêm a pessoa logada por 8 horas.
+
+**No banco de dados**
+- **SQL (PostgreSQL no Neon):** guarda usuários, agendamentos, estilos e serviços em tabelas ligadas entre si.
+
+**Na publicação**
+- **GitHub:** guarda o código.
+- **Vercel:** coloca o site no ar.
+
+## Como rodar
+
+1. Instale as dependências:
    ```bash
    npm install
    ```
-4. Inicie o servidor:
+2. Crie um arquivo `.env` com:
+   ```env
+   DATABASE_URL=endereço-do-seu-banco-postgres
+   SESSION_SECRET=uma-chave-secreta
+   ADMIN_EMAIL=email-do-admin
+   ADMIN_PASSWORD=senha-do-admin
+   ```
+3. Inicie:
    ```bash
    npm start
    ```
-5. Acesse no navegador: http://localhost:3000
+4. Acesse `http://localhost:3000`.
 
-Não abra o `index.html` diretamente nem use Live Server: o sistema precisa do servidor Node.js para login e banco de dados.
+As tabelas e a conta de administrador são criadas automaticamente na primeira execução.
 
-## Acesso de administrador para demonstração
-- E-mail: `admin@tatuagem.com`
-- Senha: `Admin123!`
+## Acesso de administrador (teste)
 
-As tabelas são criadas automaticamente na primeira execução.
+| | |
+|---|---|
+| **E-mail** | `admin@tatuagem.com` |
+| **Senha** | `Admin123!` |
 
-## O que está implementado
-- Landing page com apresentação do estúdio.
-- Cadastro e login de usuários.
-- Controle de acesso: usuário comum vê seus próprios agendamentos; administrador vê todos.
-- CRUD de agendamentos (criar, listar, editar e excluir).
-- Administrador pode atualizar o status dos agendamentos.
-- Integração com banco de dados PostgreSQL (Neon).
-- Área administrativa com lista de contas cadastradas.
+Esses são os valores padrão, usados quando `ADMIN_EMAIL` e `ADMIN_PASSWORD` não estão definidos.
 
-## Observações
-Este é um modelo para estudo. Antes de publicar na internet, configure uma chave de sessão segura, HTTPS, validações adicionais, proteção contra tentativas repetidas de login e uma política de privacidade. A senha de administrador padrão deve ser alterada em um projeto real.
+## Estrutura
 
-## Variáveis de ambiente
-- `DATABASE_URL` — **obrigatória**: string de conexão do Neon (veja `.env.example`)
-- `PORT` — porta do servidor (padrão 3000)
-- `SESSION_SECRET` — chave das sessões (defina uma chave longa e aleatória em produção)
-- `ADMIN_EMAIL` / `ADMIN_PASSWORD` — conta de administrador criada na primeira execução
-- `NODE_ENV=production` — ativa cookies seguros (requer HTTPS)
-
-## Publicar no Vercel
-1. `vercel.json` precisa ficar na **raiz** do projeto (ao lado de `package.json`), não dentro de `public/`.
-2. Em *Settings → Environment Variables* cadastre `DATABASE_URL` e `SESSION_SECRET` (e `ADMIN_PASSWORD`, se quiser trocar a senha do admin).
-3. Faça um novo deploy (*Deployments → Redeploy*) depois de cadastrar as variáveis.
+```
+api/index.js     servidor e API
+public/          páginas, estilos e scripts
+tatto.sql        estrutura do banco
+```
