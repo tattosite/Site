@@ -12,6 +12,10 @@
   <img src="https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white" alt="Vercel">
 </p>
 
+<p align="center">
+  <a href="https://site-public-swart.vercel.app/"><b>Acessar o site</b></a>
+</p>
+
 ---
 
 ## Funcionalidades
